@@ -1,8 +1,10 @@
 // client.cpp
 #include <iostream>
-#include <string>
 #include <cstring>
+#include <string>
 #include <csignal>
+#include <thread>
+#include <vector>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -10,10 +12,18 @@
 #include <arpa/inet.h>   // inet_pton
 #include <unistd.h>      // close
 
+void sendMsg(int fd);
+void recvMsg(int fd);
+
+using namespace std;
+
+string username;
+bool connected = true;
+
 int main(int argc, char* argv[]) {
-    // Uso: ./client 127.0.0.1 8080
-    if (argc != 3) {
-        std::cerr << "Uso: " << argv[0] << " <IP> <PUERTO>\n";
+    // Uso: ./c 127.0.0.1 8080 [USERNAME]
+    if (argc != 4) {
+        std::cerr << "Uso: " << argv[0] << " <IP> <PUERTO> <USUARIO>\n";
         return 1;
     }
 
@@ -21,6 +31,7 @@ int main(int argc, char* argv[]) {
 
     const char* server_ip = argv[1];
     int port = std::stoi(argv[2]);
+    username = argv[3];
 
     int fd = ::socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) { perror("socket"); return 1; }
@@ -48,28 +59,46 @@ int main(int argc, char* argv[]) {
         std::cout << buf;
     }
 
-    std::cout << "Escribe líneas y presiona Enter (Ctrl+D para salir):\n";
-    std::string line;
-    while (std::getline(std::cin, line)) {
-        // Enviar con salto de línea para que el servidor lo vea "como línea"
-        line.push_back('\n');
-        if (send(fd, line.c_str(), line.size(), MSG_NOSIGNAL) < 0) {
-            perror("send");
-            break;
-        }
-        // Recibir eco
-        ssize_t r = recv(fd, buf, sizeof(buf)-1, 0);
-        if (r <= 0) {
-            if (r < 0) perror("recv");
-            else std::cout << "[CLIENTE] Servidor cerró.\n";
-            break;
-        }
-        buf[r] = '\0';
-        std::cout << "[ECO] " << buf;
-    }
+    thread sendT(sendMsg, fd);
+    thread recvT(recvMsg, fd);
+
+    sendT.join();
+    recvT.join();
 
     shutdown(fd, SHUT_RDWR);
     close(fd);
-    std::cout << "\n[CLIENTE] Conexión finalizada.\n";
+    std::cout << "\n> Conexión finalizada.\n";
     return 0;
+}
+
+void sendMsg(int fd) {
+    cout << "> Escribe líneas y presiona Enter para enviar mensajes\n> Escriba '/leave' para desconectarse.\n> Use '/help' para ver los comandos. (Coming soon...)";
+    string line;
+    while (getline(std::cin, line)) {
+        if (line == "/leave") {
+            connected = false;
+            break;
+        }
+        line.push_back('\n');
+        string msg = "[" + username + "] " + line;
+        if (send(fd, msg.c_str(), msg.size(), MSG_NOSIGNAL) < 0) {
+            perror("send");
+            break;
+        }
+    }
+}
+
+void recvMsg(int fd) {
+    char buf[1024];
+    while (connected)
+    {
+        ssize_t r = recv(fd, buf, sizeof(buf)-1, 0);
+        if (r <= 0) {
+            if (r < 0) perror("recv");
+            else std::cout << "Servidor cerró.\n";
+            break;
+        }
+        buf[r] = '\0';
+        std::cout << buf;
+    }
 }

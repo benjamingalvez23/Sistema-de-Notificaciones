@@ -14,6 +14,7 @@
 
 using namespace std;
 
+vector<int> clients;
 
 void atenderCliente(int client_fd, sockaddr_in cli);
 
@@ -49,16 +50,11 @@ int main() {
     for(int i = 0; i < 2; i++)
     {
            client_fd = accept(server_fd, (sockaddr*)&cli, &cli_len);
-           
+           clients.emplace_back(client_fd);
            hilos.emplace_back(atenderCliente, client_fd, cli);
-//           atenderCliente(client_fd, cli);
     }
 
-    for(auto& th : hilos)
-    {
-        th.join();
-    }
-
+    for(auto& th : hilos) th.join();
 
     // Cierre ordenado
     shutdown(client_fd, SHUT_RDWR);
@@ -76,8 +72,8 @@ void atenderCliente(int client_fd, sockaddr_in cli) {
               << ":" << ntohs(cli.sin_port) << "\n";
 
     // Mensaje de bienvenida
-    const char* hello = "Bienvenido al Echo Server (escribe y te devuelvo lo mismo).\n";
-    send(client_fd, hello, std::strlen(hello), MSG_NOSIGNAL);
+    // const char* hello = "\n=== Bienvenido al Notificaciones Chat. ===\n";
+    // send(client_fd, hello, std::strlen(hello), MSG_NOSIGNAL);
 
     // Bucle de eco
     char buf[1024];
@@ -85,13 +81,21 @@ void atenderCliente(int client_fd, sockaddr_in cli) {
         ssize_t n = recv(client_fd, buf, sizeof(buf)-1, 0);
         if (n < 0) { perror("recv"); break; }
         if (n == 0) {
-            std::cout << "[SERVIDOR] Cliente cerró la conexión.\n";
+            std::cout << "[SERVIDOR] Cliente " << client_fd << " se desconectó.\n";
             break;
         }
-        buf[n] = '\0';
-        std::cout << "[SERVIDOR] Recibido: " << buf;
+
+        string buffer;
+        // string msg = "[Cliente" + std::to_string(client_fd) + "] ";
+        // buffer += msg;
+        buffer += buf;
+        buffer += '\0';
+        
+        std::cout << buffer;
         // Echo
-        ssize_t s = send(client_fd, buf, n, MSG_NOSIGNAL);
+        for (int i : clients) {
+            if (i != client_fd) ssize_t s = send(i, buffer.c_str(), sizeof(buffer)-1, MSG_NOSIGNAL);
+        }
     }
 
 }
