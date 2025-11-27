@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "3AU5Q1oxrd8=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\pedro\\Documents\\Utalca\\6to Semestre\\Sistemas Operativos y Redes\\Proyecto 2\\Proyecto 2.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\pedro\\.nuget\\packages\\microsoft.visualstudio.azure.containers.tools.targets\\1.22.1\\microsoft.visualstudio.azure.containers.tools.targets.1.22.1.nupkg.sha512"
+  ],
+  "logs": []
+}
