@@ -4,6 +4,7 @@
 Numero De Grupo: 4
 
 Nombres de los integrantes: 
+Diego 
 
 
 ## Diagrama.
