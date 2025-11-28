@@ -4,7 +4,12 @@
 Numero De Grupo: 4
 
 Nombres de los integrantes: 
-Diego 
+Diego Lara
+Benjamin Galvez
+Pedro Morales
+Bastian Correa 
+
+
 
 
 ## Diagrama.
