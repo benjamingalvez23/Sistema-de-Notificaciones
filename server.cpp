@@ -137,7 +137,7 @@ void atenderCliente(int client_fd, sockaddr_in cli) {
 }
 
 void monitorActivity() {
-    int inactivityTime = 60;  // Cuanto tiempo tiene que pasar para que este inactivo, esta en segundos
+    int inactivityTime = 15;  // Cuanto tiempo tiene que pasar para que este inactivo, esta en segundos
     int interval = 60;   // Para que envie una notificacion de que cuanto tiempo lleva inactivo
         
     while (true) {

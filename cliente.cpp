@@ -74,23 +74,28 @@ int main(int argc, char* argv[]) {
 }
 
 void sendMsg(int fd) {
-    cout << "> Escribe líneas y presiona Enter para enviar mensajes\n> Escriba '/leave' para desconectarse.\n> Use '/help' para ver los comandos. (Coming soon...) \n> Escribir '/on o /off' para activar o desactivar las notificaciones respectivamente";
+    cout << "> Escribe líneas y presiona Enter para enviar mensajes\n> Escriba '/leave' para desconectarse.\n> Use '/help' para ver los comandos. (Coming soon...) \n> Escribir '/on o /off' para activar o desactivar las notificaciones respectivamente\n";
     string line;
     while (getline(std::cin, line)) {
         if (line == "/leave") {
+            cout << "Desconectado\n";
             connected = false;
-            cout << "desconectado";
+
+            shutdown(fd, SHUT_RDWR);
+            close(fd);
+
             break;
         }
+
         if(line == "/off") {
             notification = false; 
             cout << "Notificaciones apagadas\n";
-            break;
+            continue;
         }
         if(line == "/on") {
             notification = true; 
             cout << "Notificaciones activadas\n";
-            break;
+            continue;
         }
         line.push_back('\n');
         string msg = "[" + username + "] " + line;
@@ -106,15 +111,17 @@ void recvMsg(int fd) {
     char buf[1024];
     while (connected)
     {
+
         string buf_string(buf);
         ssize_t r = recv(fd, buf, sizeof(buf)-1, 0);
-        if (r <= 0) {
-            if (r < 0) perror("recv");
-            else std::cout << "Servidor cerró.\n";
-            break;
-        }
         
         if(buf_string.find("[NOTIFICACION]") != string::npos && !notification) continue;
+        if (r <= 0) {
+            if (r < 0) perror("recv");
+            else if(connected)std::cout << "Servidor cerró.\n";
+            break;
+        }
+
         buf[r] = '\0';
         std::cout << buf;
     }
